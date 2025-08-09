@@ -399,12 +399,12 @@ class DynamicRatingCalculator:
             
             # Calculate normal rating (110°C hot spot limit)
             normal_rating = self._binary_search_rating(
-                ambient, self.thermal_model.params.normal_hot_spot_limit
+                float(ambient), self.thermal_model.params.normal_hot_spot_limit
             )
             
             # Calculate emergency rating (140°C hot spot limit)
             emergency_rating = self._binary_search_rating(
-                ambient, self.thermal_model.params.emergency_hot_spot_limit
+                float(ambient), self.thermal_model.params.emergency_hot_spot_limit
             )
             
             # Calculate current utilization
