@@ -41,7 +41,7 @@ def create_sample_data():
     return pd.DataFrame({
         'time_index': time_index,
         'hour': time_index % 24,
-        'day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][time_index // 24 % 7],
+        'day': [['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i // 24 % 7] for i in time_index],
         'base_load_mw': base_load,
         'ev_load_mw': ev_load,
         'total_load_mw': total_load,
