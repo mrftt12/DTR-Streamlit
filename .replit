@@ -24,13 +24,13 @@ args = "DTR Streamlit App"
 name = "DTR Streamlit App"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "streamlit run simple_app.py --server.port 5000"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run app.py --server.port 5000"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000

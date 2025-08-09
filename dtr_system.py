@@ -504,38 +504,38 @@ class DynamicRatingCalculator:
         return low
     
     def _determine_required_cooling(self, load_pu: float, ambient_temp: float) -> int:
-        """Determine minimum cooling stage required for given load"""
-        # Check if ONAN is sufficient
-        if self._check_thermal_limits(load_pu, ambient_temp, cooling_stage=0):
-            return 0
-        # Check if single stage fans are sufficient
-        elif self._check_thermal_limits(load_pu, ambient_temp, cooling_stage=1):
-            return 1
-        else:
-            return 2  # Full cooling required
-    
-    def _check_thermal_limits(self, load_pu: float, ambient_temp: float, 
-                             cooling_stage: int) -> bool:
-        """Check if thermal limits are met for given cooling stage"""
-        # Simplified thermal check
-        cooling_factor = [1.0, 1.3, 1.6][cooling_stage]
+        """Determine required cooling stage based on load and ambient temperature"""
+        # Calculate steady-state temperatures for different cooling stages
+        for stage in [0, 1, 2]:  # ONAN, Stage 1, Full fans
+            # Estimate cooling factor for each stage
+            if stage == 0:
+                cooling_mode = "ONAN"
+            else:
+                cooling_mode = "OFAF"
+            
+            top_oil_rise = self.thermal_model.calculate_ultimate_top_oil_rise(
+                load_pu, ambient_temp, cooling_mode
+            )
+            hot_spot_rise = self.thermal_model.calculate_hot_spot_rise(load_pu, top_oil_rise)
+            hot_spot_temp = ambient_temp + top_oil_rise + hot_spot_rise
+            
+            # Check if this cooling stage is sufficient
+            if hot_spot_temp <= self.thermal_model.params.normal_hot_spot_limit:
+                return stage
         
-        top_oil_rise = self.thermal_model.calculate_ultimate_top_oil_rise(
-            load_pu, ambient_temp
-        ) / cooling_factor
-        hot_spot_rise = self.thermal_model.calculate_hot_spot_rise(load_pu, top_oil_rise)
-        hot_spot_temp = ambient_temp + top_oil_rise + hot_spot_rise
-        
-        return hot_spot_temp <= self.thermal_model.params.normal_hot_spot_limit
+        return 2  # Return full cooling if needed
     
-    def _get_cooling_cost(self, stage: int, energy_cost: float) -> float:
+    def _get_cooling_cost(self, cooling_stage: int, energy_cost_per_kwh: float) -> float:
         """Get hourly cost for cooling stage"""
-        power_levels = [0, 15, 35]  # kW for each stage
-        return power_levels[stage] * energy_cost
+        power = self._get_cooling_power(cooling_stage)
+        return power * energy_cost_per_kwh
     
-    def _get_cooling_power(self, stage: int) -> float:
+    def _get_cooling_power(self, cooling_stage: int) -> float:
         """Get power consumption for cooling stage"""
-        return [0, 15, 35][stage]
+        power_map = {0: 0, 1: 15, 2: 35}  # kW
+        return power_map.get(cooling_stage, 0)
+    
+
 
 
 class RiskAssessment:
